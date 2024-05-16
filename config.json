@@ -1,0 +1,5 @@
+{
+    "rotor_model": "rot2prog",
+    "device": "/dev/ttyUSB0",
+    "server_addr": ":1312"
+}
