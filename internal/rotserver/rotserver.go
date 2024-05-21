@@ -95,7 +95,31 @@ func (s *RotServer) readLoop(conn net.Conn) {
 				log.Println("❌ Error getting data from rotor:", err)
 				continue
 			} 
-			log.Printf("⚙️  Rotor, Az: %v, El: %v\n", az, el) 
+			log.Printf("⚙️  Rotor, Az: %v, El: %v\n", az, el)
+			packet = RotServerData{Cmd: CommandStatus, Az: az, El: el, Flags: "OK"}
+			data, _ := packet.toBytes()
+			n, err := conn.Write(data)
+			if err != nil {
+				log.Println("❌ Error sending data to client:", n, err)
+			}
 		}
+
+		if packet.Cmd == CommandSet {
+			flags := "OK"
+			
+			err := s.rotor.SetPos(packet.Az, packet.El)
+			if err != nil {
+				log.Println("❌ Error sending data to rotor:", err)
+				flags = "ERR"
+			}
+			
+			packet = RotServerData{Cmd: CommandStatus, Az: packet.Az, El: packet.El, Flags: flags}
+			data, _ := packet.toBytes()
+			n, err := conn.Write(data)
+			if err != nil {
+				log.Println("❌ Error sending data to client:", n, err)
+			}
+		}
+		
 	}
 }
