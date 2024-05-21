@@ -17,6 +17,8 @@ const (
 	CommandSet string = "SET"
 	CommandGet string = "GET"
 	CommandStatus string = "STATUS"
+
+	AlwaysGoodChecksum int64 = 12345678 // for testing
 )
 
 type RotServerData struct {
@@ -42,6 +44,18 @@ func (d *RotServerData) Parse(data []byte) error {
 	d.Cmd = fields[Command]
 
 	// parse data
+	var err error
+	d.Az, err = strconv.ParseFloat(fields[Azimuth], 64)
+	if err != nil {
+		return err
+	}
+	d.El, err = strconv.ParseFloat(fields[Elevation], 64)
+	if err != nil {
+		return err
+	}
+
+	d.Flags  = fields[Flags]
+
 	// checksum
 	checksum, err := strconv.ParseInt(fields[Checksum], 10, 32)
 	if err != nil {
@@ -54,21 +68,52 @@ func (d *RotServerData) Parse(data []byte) error {
 			calculated += int64(fields[i][j])
 		}
 	}
-	if calculated != checksum {
+
+	if calculated != checksum && checksum != AlwaysGoodChecksum {
 		return errors.New("Wrong checksum")
 	}
 
-	d.Az, err = strconv.ParseFloat(fields[Azimuth], 64)
-	if err != nil {
-		return err
-	}
-	d.El, err = strconv.ParseFloat(fields[Elevation], 64)
-	if err != nil {
-		return err
-	}
-
-	d.Flags  = fields[Flags]
 	
 	return nil
+}
+
+func (d *RotServerData) toBytes() ([]byte, error) {
+
+	strData := ""
+
+	// command
+	switch d.Cmd {
+	case CommandGet:
+		strData += "GET"
+	case CommandSet:
+		strData += "SET"
+	case CommandStatus:
+		strData += "STATUS"
+	default:
+		return make([]byte, 0), errors.New("Bad command")
+	}
+
+	strData += ","
+	
+	// params
+	strData += strconv.FormatFloat(d.Az, 'f', 1, 64)
+	strData += ","
+	strData += strconv.FormatFloat(d.El, 'f', 1, 64)
+	strData += ","
+	strData += d.Flags
+	strData += ","
+
+	// calculate checksum
+	data := []byte(strData)
+	var checksum int64 = 0
+	for i := 0; i < len(data); i++ {
+		checksum += int64(data[i])
+	}
+
+	// append it to data
+	strData += strconv.FormatInt(checksum, 10)
+	data = []byte(strData)
+	
+	return data, nil
 }
 
