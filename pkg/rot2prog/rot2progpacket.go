@@ -3,7 +3,6 @@ package rot2prog
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 )
 
