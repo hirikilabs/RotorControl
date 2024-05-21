@@ -23,16 +23,19 @@ func main() {
 	
 	// create rotor
 	switch config.RotorModel {
-	case "rot2prog":
+	case rotors.Rot2Prog :
 		rotor = &rot2prog.Rot2Prog{Device: config.Device}
 		err = rotor.Init()
-		if err != nil {
-			log.Fatal("Problem with the rotor interface: ", err)
-		}
 	default:
 		log.Fatal("Unrecognized rotor model")
 		
 	}
+
+	// check errors
+	if err != nil {
+		log.Fatal("Problem with the rotor interface: ", err)
+	}
+
 
 	// start TCP server
 	server := rotserver.NewRotServer(config.ServerAddr, rotor)
