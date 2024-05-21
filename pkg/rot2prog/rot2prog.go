@@ -110,19 +110,6 @@ func (r *Rot2Prog) SetPos(az float64, el float64) error {
 	if n < CmdPacketBytes {
 		return errors.New("Can't send whole packet")
 	}
-	// read answer
-	buf := make([]byte, StatusPacketBytes)
-	n, err = r.Port.Read(buf)
-    if err != nil {
-		return err 
-    }
-	if n < StatusPacketBytes {
-		return errors.New("Didn't receive whole packet")
-	}
-	err = s.ParseBytes(buf)
-	if err != nil {
-		return err
-	}
 	
 	return nil	
 }
